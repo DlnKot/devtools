@@ -2,11 +2,16 @@ package main
 
 import (
 	"devtools/internal/app"
+
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 func main() {
-	
-	app := app.New()
+	// Создаем и запускаем приложение
+	app := app.NewApp()
+	p := tea.NewProgram(app, tea.WithAltScreen())
 
-	app.Run()
+	if _, err := p.Run(); err != nil {
+		panic(err)
+	}
 }

@@ -1,46 +1,41 @@
 package app
 
 import (
-	"devtools/internal/modules"
-	"devtools/internal/modules/network"
+	"devtools/internal/models"
 
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/app"
-	"fyne.io/fyne/v2/container"
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 type App struct {
-	fyneApp        fyne.App
-	Window         fyne.Window
-	ModulesManager modules.ModulesManager
-	Views          []fyne.Container
+	currentModel tea.Model
 }
 
-func New() *App {
-	a := app.New()
-	w := a.NewWindow("Dvtls")
-	w.Resize(fyne.NewSize(800, 600))
-
-	app := &App{
-		fyneApp: a,
-		Window:  w,
+func NewApp() *App {
+	
+	return &App{
+		currentModel: models.NewMenuModel(),
 	}
-
-	// TODO: Реализовать выбор модулей через конфиг
-	app.ModulesManager = modules.NewModulesManager()
-	app.ModulesManager.RegisterModule(network.NewNetworkModule("network", "Network", true))
-
-	return app
 }
 
-func (a *App) Run() {
-	// Создаем вкладки для каждого модуля
-	tabs := container.NewAppTabs()
+func (a *App) Init() tea.Cmd {
+	return a.currentModel.Init()
+}
 
-	for _, module := range a.ModulesManager.GetModules() {
-		tabs.Append(container.NewTabItem(module.Name(), module.GetView()))
+func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+
+	// Обновляем текущую модель
+	a.currentModel, cmd = a.currentModel.Update(msg)
+
+	// Проверяем, не нужно ли переключить модель
+	if switchMsg, ok := msg.(models.SwitchModelMsg); ok {
+		a.currentModel = switchMsg.Model
+		cmd = a.currentModel.Init()
 	}
 
-	a.Window.SetContent(tabs)
-	a.Window.ShowAndRun()
+	return a, cmd
+}
+
+func (a *App) View() string {
+	return a.currentModel.View()
 }
